@@ -2,7 +2,6 @@ package io.pivotal.pal.trackertest;
 
 import io.pivotal.pal.tracker.InMemoryTimeEntryRepository;
 import io.pivotal.pal.tracker.TimeEntry;
-import javafx.beans.binding.BooleanExpression;
 import org.junit.Test;
 
 import java.util.List;
