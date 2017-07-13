@@ -56,7 +56,7 @@ public class PalTrackerTest {
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         DocumentContext createJson = parse(createResponse.getBody());
-        assertThat(createJson.read("$.id", Long.class)).isEqualTo(1L);
+        assertThat(createJson.read("$.id", Long.class)).isEqualTo(0L);
         assertThat(createJson.read("$.projectId", Long.class)).isEqualTo(123L);
         assertThat(createJson.read("$.userId", Long.class)).isEqualTo(456L);
         assertThat(createJson.read("$.date", String.class)).isEqualTo("today");
@@ -66,7 +66,7 @@ public class PalTrackerTest {
         ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/timeEntries/1", String.class);
         assertThat(readResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         DocumentContext readJson = parse(createResponse.getBody());
-        assertThat(readJson.read("$.id", Long.class)).isEqualTo(1L);
+        assertThat(readJson.read("$.id", Long.class)).isEqualTo(0L);
         assertThat(readJson.read("$.projectId", Long.class)).isEqualTo(123L);
         assertThat(readJson.read("$.userId", Long.class)).isEqualTo(456L);
         assertThat(readJson.read("$.date", String.class)).isEqualTo("today");
