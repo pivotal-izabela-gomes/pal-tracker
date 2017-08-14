@@ -25,7 +25,7 @@ public class TimeEntriesController {
 
     @GetMapping(path= "/timeEntries/{id}")
     public ResponseEntity<?> read(@PathVariable long id) {
-        TimeEntry timeEntry = repository.get(id);
+        TimeEntry timeEntry = repository.find(id);
         if(timeEntry == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -34,8 +34,8 @@ public class TimeEntriesController {
 
     @PostMapping(path= "/timeEntries")
     public ResponseEntity<TimeEntry> create(@RequestBody TimeEntry timeEntry) {
-        repository.create(timeEntry);
-        return new ResponseEntity<>(timeEntry, HttpStatus.CREATED);
+        TimeEntry created = repository.create(timeEntry);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping(path= "/timeEntries/{id}")
