@@ -8,9 +8,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mariadb.jdbc.MariaDbDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -28,7 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = PalTrackerApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
 public class PalTrackerTest {
 
-    @Autowired
+    @LocalServerPort
+    private String port;
     private TestRestTemplate restTemplate;
 
     @Before
@@ -37,12 +40,18 @@ public class PalTrackerTest {
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.execute("TRUNCATE time_entries");
+
+        RestTemplateBuilder builder = new RestTemplateBuilder()
+                .rootUri("http://localhost:" + port)
+                .basicAuthorization("user", "password");
+
+        restTemplate = new TestRestTemplate(builder);
     }
 
     @Test
     public void crudTest() throws Exception {
         // List
-        ResponseEntity<String> listResponse = restTemplate.getForEntity("/timeEntries", String.class);
+        ResponseEntity<String> listResponse = restTemplate.getForEntity("/time-entries", String.class);
         assertThat(listResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         DocumentContext listJson = parse(listResponse.getBody());
@@ -52,7 +61,7 @@ public class PalTrackerTest {
         TimeEntry timeEntry = new TimeEntry(123, 456, "today", 8);
 
         // Create
-        ResponseEntity<String> createResponse = restTemplate.postForEntity("/timeEntries", timeEntry, String.class);
+        ResponseEntity<String> createResponse = restTemplate.postForEntity("/time-entries", timeEntry, String.class);
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         DocumentContext createJson = parse(createResponse.getBody());
@@ -63,7 +72,7 @@ public class PalTrackerTest {
         assertThat(createJson.read("$.hours", Long.class)).isEqualTo(8);
 
         // Read
-        ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/timeEntries/1", String.class);
+        ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/time-entries/1", String.class);
         assertThat(readResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         DocumentContext readJson = parse(createResponse.getBody());
         assertThat(readJson.read("$.id", Long.class)).isEqualTo(1L);
@@ -75,7 +84,7 @@ public class PalTrackerTest {
         // Update
         TimeEntry timeEntryUpdates = new TimeEntry(1, 2, 3, "tomorrow", 9);
 
-        ResponseEntity<String> updateResponse = restTemplate.exchange("/timeEntries/1", HttpMethod.PUT, new HttpEntity(timeEntryUpdates, null), String.class);
+        ResponseEntity<String> updateResponse = restTemplate.exchange("/time-entries/1", HttpMethod.PUT, new HttpEntity(timeEntryUpdates, null), String.class);
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         DocumentContext updateJson = parse(updateResponse.getBody());
@@ -85,7 +94,7 @@ public class PalTrackerTest {
         assertThat(updateJson.read("$.date", String.class)).isEqualTo("tomorrow");
         assertThat(updateJson.read("$.hours", Long.class)).isEqualTo(9);
 
-        ResponseEntity<String> updatedReadResponse = this.restTemplate.getForEntity("/timeEntries/1", String.class);
+        ResponseEntity<String> updatedReadResponse = this.restTemplate.getForEntity("/time-entries/1", String.class);
         assertThat(updatedReadResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         DocumentContext updatedReadJson = parse(updatedReadResponse.getBody());
@@ -96,10 +105,10 @@ public class PalTrackerTest {
         assertThat(updatedReadJson.read("$.hours", Long.class)).isEqualTo(9);
 
         // Delete
-        ResponseEntity<String> deleteResponse = restTemplate.exchange("/timeEntries/1", HttpMethod.DELETE, null, String.class);
+        ResponseEntity<String> deleteResponse = restTemplate.exchange("/time-entries/1", HttpMethod.DELETE, null, String.class);
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<String> deletedReadResponse = this.restTemplate.getForEntity("/timeEntries/1", String.class);
+        ResponseEntity<String> deletedReadResponse = this.restTemplate.getForEntity("/time-entries/1", String.class);
         assertThat(deletedReadResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

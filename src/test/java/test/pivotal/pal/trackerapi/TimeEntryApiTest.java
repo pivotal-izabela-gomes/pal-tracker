@@ -8,8 +8,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mariadb.jdbc.MariaDbDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -30,7 +32,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(classes = PalTrackerApplication.class, webEnvironment = RANDOM_PORT)
 public class TimeEntryApiTest {
 
-    @Autowired
+    @LocalServerPort
+    private String port;
     private TestRestTemplate restTemplate;
 
     private TimeEntry timeEntry = new TimeEntry(123, 456, "today", 8);
@@ -41,11 +44,17 @@ public class TimeEntryApiTest {
 
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.execute("TRUNCATE time_entries");
+
+        RestTemplateBuilder builder = new RestTemplateBuilder()
+                .rootUri("http://localhost:" + port)
+                .basicAuthorization("user", "password");
+
+        restTemplate = new TestRestTemplate(builder);
     }
 
     @Test
     public void testCreate() throws Exception {
-        ResponseEntity<String> createResponse = restTemplate.postForEntity("/timeEntries", timeEntry, String.class);
+        ResponseEntity<String> createResponse = restTemplate.postForEntity("/time-entries", timeEntry, String.class);
 
 
         assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -63,7 +72,7 @@ public class TimeEntryApiTest {
         Long id = createTimeEntry();
 
 
-        ResponseEntity<String> listResponse = restTemplate.getForEntity("/timeEntries", String.class);
+        ResponseEntity<String> listResponse = restTemplate.getForEntity("/time-entries", String.class);
 
 
         assertThat(listResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -82,7 +91,7 @@ public class TimeEntryApiTest {
         Long id = createTimeEntry();
 
 
-        ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/timeEntries/" + id, String.class);
+        ResponseEntity<String> readResponse = this.restTemplate.getForEntity("/time-entries/" + id, String.class);
 
 
         assertThat(readResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -100,7 +109,7 @@ public class TimeEntryApiTest {
         TimeEntry updatedTimeEntry = new TimeEntry(2, 3, "tomorrow", 9);
 
 
-        ResponseEntity<String> updateResponse = restTemplate.exchange("/timeEntries/" + id, HttpMethod.PUT, new HttpEntity<>(updatedTimeEntry, null), String.class);
+        ResponseEntity<String> updateResponse = restTemplate.exchange("/time-entries/" + id, HttpMethod.PUT, new HttpEntity<>(updatedTimeEntry, null), String.class);
 
 
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -118,16 +127,16 @@ public class TimeEntryApiTest {
         Long id = createTimeEntry();
 
 
-        ResponseEntity<String> deleteResponse = restTemplate.exchange("/timeEntries/" + id, HttpMethod.DELETE, null, String.class);
+        ResponseEntity<String> deleteResponse = restTemplate.exchange("/time-entries/" + id, HttpMethod.DELETE, null, String.class);
 
 
         assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<String> deletedReadResponse = this.restTemplate.getForEntity("/timeEntries/" + id, String.class);
+        ResponseEntity<String> deletedReadResponse = this.restTemplate.getForEntity("/time-entries/" + id, String.class);
         assertThat(deletedReadResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     private Long createTimeEntry() {
-        return restTemplate.postForObject("/timeEntries", timeEntry, TimeEntry.class).getId();
+        return restTemplate.postForObject("/time-entries", timeEntry, TimeEntry.class).getId();
     }
 }

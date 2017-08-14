@@ -10,6 +10,7 @@ import java.util.List;
  * Created by pivotal on 7/11/17.
  */
 @RestController
+@RequestMapping(path= "/time-entries")
 public class TimeEntriesController {
 
     private TimeEntryRepository repository;
@@ -18,12 +19,12 @@ public class TimeEntriesController {
         this.repository = repository;
     }
 
-    @GetMapping(path= "/timeEntries")
+    @GetMapping
     public ResponseEntity<List<TimeEntry>> list() {
         return ResponseEntity.ok(repository.list());
     }
 
-    @GetMapping(path= "/timeEntries/{id}")
+    @GetMapping(path= "{id}")
     public ResponseEntity<?> read(@PathVariable long id) {
         TimeEntry timeEntry = repository.find(id);
         if(timeEntry == null) {
@@ -32,13 +33,13 @@ public class TimeEntriesController {
         return ResponseEntity.ok(timeEntry);
     }
 
-    @PostMapping(path= "/timeEntries")
+    @PostMapping
     public ResponseEntity<TimeEntry> create(@RequestBody TimeEntry timeEntry) {
         TimeEntry created = repository.create(timeEntry);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @PutMapping(path= "/timeEntries/{id}")
+    @PutMapping(path= "{id}")
     public ResponseEntity<TimeEntry> update(@PathVariable long id, @RequestBody TimeEntry timeEntry) {
         TimeEntry updated = repository.update(id, timeEntry);
         if(updated == null) {
@@ -47,7 +48,7 @@ public class TimeEntriesController {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping(path="/timeEntries/{id}")
+    @DeleteMapping(path="{id}")
     public ResponseEntity<TimeEntry> delete(@PathVariable long id) {
         repository.delete(id);
         return ResponseEntity.noContent().build();
